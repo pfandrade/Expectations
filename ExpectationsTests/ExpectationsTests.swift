@@ -7,7 +7,7 @@
 //
 
 import XCTest
-@testable import Expectations
+import Expectations
 
 class ExpectationsTests: XCTestCase {
 
