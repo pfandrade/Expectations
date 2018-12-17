@@ -11,24 +11,63 @@ import XCTest
 
 class ExpectationsTests: XCTestCase {
 
-    override func setUp() {
-        // Put setup code here. This method is called before the invocation of each test method in the class.
-    }
-
-    override func tearDown() {
-        // Put teardown code here. This method is called after the invocation of each test method in the class.
-    }
-
-    func testExample() {
-        // This is an example of a functional test case.
-        // Use XCTAssert and related functions to verify your tests produce the correct results.
-    }
-
-    func testPerformanceExample() {
-        // This is an example of a performance test case.
-        self.measure {
-            // Put the code you want to measure the time of here.
+    func testSimpleWait() {
+        
+        let expectation = Expectation()
+        
+        var flag = false
+        DispatchQueue.global().asyncAfter(deadline: .now() + 1) {
+            flag = true
+            expectation.fulfill()
         }
+        
+        let startDate = Date()
+        expectation.wait(for: 5)
+        let exitDate = Date()
+        
+        XCTAssertTrue(flag)
+        XCTAssertTrue(exitDate.timeIntervalSince(startDate) < 1.3)
     }
 
+    func testConditionWait() {
+        let expectation = Expectation()
+        let queue = OperationQueue()
+        
+        var flag = false
+        
+        let blockOperation = BlockOperation()
+        blockOperation.addExecutionBlock { [unowned blockOperation] () -> Void in
+            expectation.wait(until: Date.distantFuture, while: !blockOperation.isCancelled)
+            
+            if blockOperation.isCancelled {
+                return
+            }
+            flag = true
+        }
+        queue.addOperation(blockOperation)
+        
+        Thread.sleep(forTimeInterval: 1.0)
+        blockOperation.cancel()
+        queue.waitUntilAllOperationsAreFinished()
+        XCTAssertFalse(flag)
+    }
+    
+    func testRunRunloop() {
+        
+        let expectation = Expectation()
+        
+        var flag = false
+        // by scheduling in the main thread we assert that the runloop is running
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+            flag = true
+            expectation.fulfill()
+        }
+        
+        let startDate = Date()
+        expectation.wait(for: 5, runRunloop: true)
+        let exitDate = Date()
+        
+        XCTAssertTrue(flag)
+        XCTAssertTrue(exitDate.timeIntervalSince(startDate) < 1.3)
+    }
 }
