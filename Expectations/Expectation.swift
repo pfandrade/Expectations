@@ -9,13 +9,14 @@
 import Foundation
 
 
+@objcMembers
 public class Expectation: NSObject {
     
     // public
     public private(set) var fulfilled = false
     public var waitGranularity: TimeInterval = 0.1 // test condition in intervals of 0.1 s
     
-    init(name: String? = nil) {
+    public init(name: String? = nil) {
         self.state.name = name
     }
     
@@ -27,14 +28,14 @@ public class Expectation: NSObject {
     }
     
     public func wait(for interval: TimeInterval,
-                     while condition: @autoclosure () -> Bool = true,
-                     runRunloop: Bool = false) {
-        wait(until: Date().addingTimeInterval(interval), while: condition, runRunloop: runRunloop)
+                     runRunloop: Bool = false,
+                     while condition: @autoclosure () -> Bool = true) {
+        wait(until: Date().addingTimeInterval(interval), runRunloop: runRunloop, while: condition)
     }
     
     public func wait(until limit: Date,
-                     while condition: @autoclosure () -> Bool = true,
-                     runRunloop: Bool = false) {
+                     runRunloop: Bool = false,
+                     while condition: @autoclosure () -> Bool = true) {
         state.lock()
         while condition() && !fulfilled {
             if Date() > limit {
